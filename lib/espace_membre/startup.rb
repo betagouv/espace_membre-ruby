@@ -1,7 +1,5 @@
 module EspaceMembre
   class Startup < Record
-    extend AskCollection
-
     self.primary_key = "uuid"
 
     validates :ghid, presence: true
