@@ -5,15 +5,23 @@ default: &default
   url: <%= ENV['DATABASE_URL'] %>
 
 development:
-  <<: *default
-  database: espacemembre
+  primary:
+    <<: *default
+  espace_membre_db:
+    <<: *default
+    schema_dump: "espace-membre.rb"
+    database: emdb
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  <<: *default
-  database: espacemembre-test
+  primary:
+    <<: *default
+  espace_membre_db:
+    <<: *default
+    schema_dump: "espace-membre.rb"
+    database: emdb_test
 
 # SQLite3 write its data on the local filesystem, as such it requires
 # persistent disks. If you are deploying to a managed service, you should

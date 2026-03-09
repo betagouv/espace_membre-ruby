@@ -9,6 +9,14 @@ module EspaceMembre
         require "espace_membre/phase.rb"
         require "espace_membre/startup.rb"
         require "espace_membre/user.rb"
+
+        path = [File.expand_path('../../../spec/dummy/spec/factories', __FILE__)]
+
+        FactoryBot.definition_file_paths += path if defined?(FactoryBotRails)
+
+        FactoryBot.factories.clear
+
+        FactoryBot.find_definitions
       end
     end
   end
