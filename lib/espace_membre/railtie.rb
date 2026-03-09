@@ -12,11 +12,15 @@ module EspaceMembre
 
         path = [File.expand_path('../../../spec/dummy/spec/factories', __FILE__)]
 
-        FactoryBot.definition_file_paths += path if defined?(FactoryBotRails)
+        if defined?(FactoryBotRails)
+          FactoryBot.class_eval do
+            definition_file_paths += path
 
-        FactoryBot.factories.clear
+            factories.clear
 
-        FactoryBot.find_definitions
+            find_definitions
+          end
+        end
       end
     end
   end
