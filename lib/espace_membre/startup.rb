@@ -19,7 +19,7 @@ module EspaceMembre
             class_name: "Phase",
             inverse_of: :startup
 
-    scope :in_phase, ->(phase) { joins(:phases).merge(Phase.active).where("phases.name" => phase) }
+    scope :in_phase, ->(*phase) { joins(:phases).merge(Phase.active).where("phases.name" => phase) }
 
     Phase::PHASES.each do |name|
       define_method "in_#{name}?" do
