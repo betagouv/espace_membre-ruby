@@ -6,9 +6,9 @@ Espace-Membre database to allow writing simple Ruby apps around it.
 ## TODO
 
 - [ ] allow configuration (database name)
-- [ ] restore RSpec
-- [ ] run the tests
-- [ ] distribute.
+- [X] restore RSpec
+- [X] run the tests
+- [X] distribute.
 
 ## Installation
 Add this line to your application's Gemfile:
