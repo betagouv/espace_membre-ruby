@@ -11,7 +11,7 @@ module EspaceMembre
       "transfer"
     ]
 
-    scope :latest_completed, -> { order(start: :desc) }
+    scope :active, -> { where("end" => nil) }
 
     PHASES.each do |phase|
       # define scopes for each state (Phase.success, Phase.alumni, etc.)

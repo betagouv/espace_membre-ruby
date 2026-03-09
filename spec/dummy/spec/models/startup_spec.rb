@@ -33,7 +33,7 @@ RSpec.describe EspaceMembre::Startup, type: :model do
       end
 
       it "updates the latest phase" do
-        expect(startup).to be_in_construction
+        expect(startup.reload).to be_in_construction
       end
     end
   end
@@ -45,6 +45,12 @@ RSpec.describe EspaceMembre::Startup, type: :model do
 
         expect(EspaceMembre::Startup.in_phase(phase_name)).to contain_exactly(startup)
       end
+    end
+
+    it "picks the latest phase to decide" do
+      startup = FactoryBot.create(:startup, :in_acceleration)
+
+      expect(EspaceMembre::Startup.in_phase(:investigation)).not_to include startup
     end
   end
 end
