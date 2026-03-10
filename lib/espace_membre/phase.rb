@@ -11,7 +11,11 @@ module EspaceMembre
       "transfer"
     ]
 
-    scope :active, -> { where("end" => nil) }
+    # FIXME: at the moment multiple ongoing/active (i.e no end date)
+    # phases for the same startup can coexist happily, we must fix the
+    # data and make this a valid statement.
+    #
+    # scope :active, -> { where("end" => nil) } # this does NOT work
 
     PHASES.each do |phase|
       # define scopes for each state (Phase.success, Phase.alumni, etc.)

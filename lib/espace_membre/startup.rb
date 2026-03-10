@@ -19,7 +19,17 @@ module EspaceMembre
             class_name: "Phase",
             inverse_of: :startup
 
-    scope :in_phase, ->(*phase) { joins(:phases).merge(Phase.active).where("phases.name" => phase) }
+    # we must use this tragic hack because a startup can have one or
+    # more phases without an 'end' timestamp, which is wrong and
+    # misleading but that's how the data exists. So instead of
+    # assuming 'phase.end = nil' designates the active and latest
+    # phase, we have to always look at which one startet
+    # last.
+    scope :in_phase, ->(*phase) {
+      joins(:phases)
+        .where(phases: { name: phase })
+        .where("phases.start = (SELECT MAX(p2.start) FROM phases p2 WHERE p2.startup_id = startups.uuid)")
+    }
 
     Phase::PHASES.each do |name|
       define_method "in_#{name}?" do

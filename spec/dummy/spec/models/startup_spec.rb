@@ -52,5 +52,23 @@ RSpec.describe EspaceMembre::Startup, type: :model do
 
       expect(EspaceMembre::Startup.in_phase(:investigation)).not_to include startup
     end
+
+    describe "[bug] there can be multiple active startup phases (without an end date)" do
+      before do
+        FactoryBot.create(:phase, :construction, startup: startup)
+      end
+
+      it "knows which one is the latest phase" do
+        expect(startup.latest_phase.name).to eq "construction"
+      end
+
+      it "does not include the startup in the previous phase scope" do
+        expect(described_class.in_phase(:investigation)).not_to include startup
+      end
+
+      it "includes the startup in the new phase scope" do
+        expect(described_class.in_phase(:construction)).to include startup
+      end
+    end
   end
 end
