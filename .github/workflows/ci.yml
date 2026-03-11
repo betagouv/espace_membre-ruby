@@ -41,6 +41,7 @@ jobs:
         ports: ["5432:5432"]
         env:
           POSTGRES_PASSWORD: dummy
+          POSTGRES_DATABASE: emdb_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -59,6 +60,6 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:dummy@localhost:5432/postgres
+          DATABASE_URL: postgres://postgres:dummy@localhost:5432/emdb_test
         working-directory: ./spec/dummy
         run: bundle exec rspec
