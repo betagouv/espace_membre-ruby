@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe EspaceMembre::User, type: :model do
+  include ActiveSupport::Testing::TimeHelpers
+
   subject(:user) { FactoryBot.create(:user) }
 
   describe "factory" do
@@ -21,6 +23,30 @@ RSpec.describe EspaceMembre::User, type: :model do
 
     it "can tell the latest mission" do
       expect(user.last_mission.employer).to eq 'foo'
+    end
+  end
+
+  describe "scopes" do
+    describe ".expired" do
+      subject(:scope) { described_class.expired }
+
+      let(:user) { FactoryBot.create(:user, :with_active_mission) }
+
+      context "when the user has an active mission" do
+        it { is_expected.not_to include user }
+      end
+
+      context "when then user's mission ends today" do
+        before { travel_to(user.last_mission.end) }
+
+        it { is_expected.not_to include user }
+      end
+
+      context "when the user's last mission is past" do
+        before { travel_to(user.last_mission.end + 1.day) }
+
+        it { is_expected.to include user }
+      end
     end
   end
 end
