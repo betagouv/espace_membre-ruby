@@ -28,6 +28,13 @@ module EspaceMembre
     validates :username, :fullname, :role, :domaine, presence: true
     validates :domaine, inclusion: { in: DOMAINES }
 
+    scope :expired, -> {
+      where(
+        "NOT EXISTS (:active_missions)",
+        active_missions: Mission.active.where("missions.user_id = users.uuid")
+      )
+    }
+
     def self.identify_email!(email)
       User.find_by!(primary_email: email)
     rescue ActiveRecord::RecordNotFound

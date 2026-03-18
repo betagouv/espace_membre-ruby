@@ -18,6 +18,18 @@ FactoryBot.define do
       end
     end
 
+    trait :with_expired_mission do
+      with_active_mission
+
+      transient do
+        mission_end { Date.yesterday }
+      end
+
+      after(:create) do |user, context|
+        user.missions.last.update!(end: context.mission_end)
+      end
+    end
+
     trait :with_active_startup do
       with_active_mission
 
