@@ -10,7 +10,7 @@ development:
   espace_membre_db:
     <<: *default
     schema_dump: "espace-membre.rb"
-    database: emdb
+    url: <%= ENV['ESPACE_MEMBRE_DB_URL'] %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

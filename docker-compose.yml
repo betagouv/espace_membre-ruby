@@ -6,11 +6,14 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:dummy@db:5434
+      ESPACE_MEMBRE_DB_URL: postgresql://postgres:dummy@espace-membre-db:5433
+      RUBY_DEBUG_NO_RELINE: true
     volumes:
       - "./:/app"
       - "/app/node_modules"
     depends_on:
       - db
+      - espace-membre-db
   db:
     image: postgres:16
     volumes:
@@ -18,3 +21,10 @@ services:
     environment:
       POSTGRES_PASSWORD: 'dummy'
       PGPORT: 5434
+  espace-membre-db:
+    image: postgres:16
+    volumes:
+      - "./tmp/emdb:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_PASSWORD: 'dummy'
+      PGPORT: 5433

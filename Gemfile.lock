@@ -164,6 +164,8 @@ GEM
     psych (5.3.1)
       date
       stringio
+    puma (7.2.0)
+      nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.2.4)
     rack-session (2.1.1)
@@ -296,6 +298,7 @@ DEPENDENCIES
   factory_bot
   faker
   pg
+  puma
   rspec
   rspec-rails
   rubocop-rails-omakase
