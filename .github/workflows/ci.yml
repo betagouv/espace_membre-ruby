@@ -60,12 +60,15 @@ jobs:
       - name: Setup the database
         working-directory: ./spec/dummy
         env:
+          RAILS_ENV: test
+          ESPACE_MEMBRE_DB_URL: postgres://postgres:dummy@localhost:5432/emdb_test
           DATABASE_URL: postgres://postgres:dummy@localhost:5432/emdb_test
         run: bin/rails db:reset:espace_membre_db
 
       - name: Run tests
         env:
           RAILS_ENV: test
+          ESPACE_MEMBRE_DB_URL: postgres://postgres:dummy@localhost:5432/emdb_test
           DATABASE_URL: postgres://postgres:dummy@localhost:5432/emdb_test
         working-directory: ./spec/dummy
         run: bundle exec rspec
