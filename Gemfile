@@ -7,6 +7,7 @@ gemspec
 gem "rubocop-rails-omakase", require: false
 
 gem "debug"
+gem "puma"
 gem "faker"
 gem "pg"
 gem "rspec"

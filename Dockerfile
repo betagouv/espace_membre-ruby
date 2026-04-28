@@ -13,6 +13,6 @@ COPY . ./
 
 RUN bundle install
 
-ENTRYPOINT ["./bin/docker-entrypoint"]
+WORKDIR /app/spec/dummy
 
-CMD ["bin", "bash"]
+CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]
