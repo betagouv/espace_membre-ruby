@@ -1,7 +1,5 @@
 module EspaceMembre
   class Startup < Record
-    self.primary_key = "uuid"
-
     validates :ghid, presence: true
 
     belongs_to :incubator
