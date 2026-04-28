@@ -6,6 +6,7 @@ module EspaceMembre
         require "espace_membre/incubator.rb"
         require "espace_membre/mission.rb"
         require "espace_membre/mission_startup.rb"
+        require "espace_membre/organization.rb"
         require "espace_membre/phase.rb"
         require "espace_membre/startup.rb"
         require "espace_membre/user.rb"

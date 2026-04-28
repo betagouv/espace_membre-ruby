@@ -6,6 +6,8 @@ module EspaceMembre
 
     has_many :phases
 
+    has_and_belongs_to_many :organizations, join_table: "startups_organizations"
+
     has_and_belongs_to_many :missions, join_table: "missions_startups"
 
     has_many :users, through: :missions
