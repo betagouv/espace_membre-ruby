@@ -19,6 +19,8 @@ module EspaceMembre
             class_name: "Phase",
             inverse_of: :startup
 
+    scope :active, -> { in_phase(EspaceMembre::Phase::ACTIVE_PHASES) }
+
     # we must use this tragic hack because a startup can have one or
     # more phases without an 'end' timestamp, which is wrong and
     # misleading but that's how the data exists. So instead of
@@ -31,14 +33,8 @@ module EspaceMembre
         .where("phases.start = (SELECT MAX(p2.start) FROM phases p2 WHERE p2.startup_id = startups.uuid)")
     }
 
-    Phase::PHASES.each do |name|
-      define_method "in_#{name}?" do
-        latest_phase.send("#{name}?")
-      end
-    end
-
     def in_phase?(name)
-      send("in_#{name}?")
+      latest_phase.name == name.to_s
     end
 
     def to_s
