@@ -18,8 +18,6 @@ FactoryBot.define do
       in_investigation
 
       after(:create) do |startup|
-        startup.latest_phase.terminate!
-
         FactoryBot.create(:phase, :construction, startup: startup)
       end
     end
@@ -28,9 +26,15 @@ FactoryBot.define do
       in_construction
 
       after(:create) do |startup|
-        startup.latest_phase.terminate!
-
         FactoryBot.create(:phase, :acceleration, startup: startup)
+      end
+    end
+
+    trait :abandon_investigation do
+      in_investigation
+
+      after(:create) do |startup|
+        FactoryBot.create(:phase, :"abandon-investigation", startup: startup)
       end
     end
   end

@@ -18,8 +18,10 @@ development:
 test:
   primary:
     <<: *default
+    database: test
   espace_membre_db:
     <<: *default
+    database: emdb-test
     schema_dump: "espace-membre.rb"
     url: <%= ENV['ESPACE_MEMBRE_DB_URL'] %>
 

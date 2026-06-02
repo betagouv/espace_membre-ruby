@@ -23,7 +23,7 @@ RSpec.describe EspaceMembre::Startup, type: :model do
     end
 
     context "when in the initial state" do
-      it { is_expected.to be_in_investigation }
+      it { is_expected.to be_in_phase(:investigation) }
     end
 
     context "when the startup evolves" do
@@ -33,7 +33,7 @@ RSpec.describe EspaceMembre::Startup, type: :model do
       end
 
       it "updates the latest phase" do
-        expect(startup.reload).to be_in_construction
+        expect(startup.reload).to be_in_phase(:construction)
       end
     end
   end
@@ -69,6 +69,15 @@ RSpec.describe EspaceMembre::Startup, type: :model do
       it "includes the startup in the new phase scope" do
         expect(described_class.in_phase(:construction)).to include startup
       end
+    end
+  end
+
+  describe "in_phase?" do
+    context "when the startup is abandonned" do
+      subject(:startup) { FactoryBot.create(:startup, :abandon_investigation) }
+
+      it { is_expected.not_to be_in_phase(:active) }
+      it { is_expected.to be_in_phase("abandon-investigation") }
     end
   end
 end

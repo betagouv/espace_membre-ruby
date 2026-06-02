@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    espace_membre-ruby (0.4.1)
+    espace_membre-ruby (1.0)
       rails (>= 8.1.2)
 
 GEM

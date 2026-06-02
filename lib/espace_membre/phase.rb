@@ -2,20 +2,24 @@ module EspaceMembre
   class Phase < Record
     belongs_to :startup
 
-    PHASES = [
-      "investigation",
-      "construction",
-      "acceleration",
-      "success",
-      "alumni",
-      "transfer"
+    PHASES = %w[
+      investigation
+      abandon-investigation
+      construction
+      acceleration
+      consolidation
+      abandon
+      opere
+      transfere
     ]
 
-    # FIXME: at the moment multiple ongoing/active (i.e no end date)
-    # phases for the same startup can coexist happily, we must fix the
-    # data and make this a valid statement.
-    #
-    # scope :active, -> { where("end" => nil) } # this does NOT work
+    ACTIVE_PHASES = %w[
+      acceleration
+      consolidation
+      construction
+      investigation
+      opere
+    ].freeze
 
     PHASES.each do |phase|
       # define scopes for each state (Phase.success, Phase.alumni, etc.)
@@ -25,12 +29,6 @@ module EspaceMembre
       define_method "#{phase}?" do
         name == phase
       end
-    end
-
-    scope :active_phase, -> { construction.or(acceleration) }
-
-    def terminate!
-      update!(end: Time.zone.now)
     end
 
     def to_s
