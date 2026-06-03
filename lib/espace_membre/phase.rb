@@ -13,14 +13,6 @@ module EspaceMembre
       transfere
     ]
 
-    ACTIVE_PHASES = %w[
-      acceleration
-      consolidation
-      construction
-      investigation
-      opere
-    ].freeze
-
     PHASES.each do |phase|
       # define scopes for each state (Phase.success, Phase.alumni, etc.)
       scope phase, -> { where("phases.name": phase) }

@@ -19,8 +19,6 @@ module EspaceMembre
             class_name: "Phase",
             inverse_of: :startup
 
-    scope :active, -> { in_phase(EspaceMembre::Phase::ACTIVE_PHASES) }
-
     # we must use this tragic hack because a startup can have one or
     # more phases without an 'end' timestamp, which is wrong and
     # misleading but that's how the data exists. So instead of
