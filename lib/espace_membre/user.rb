@@ -28,6 +28,13 @@ module EspaceMembre
     validates :username, :fullname, :role, :domaine, presence: true
     validates :domaine, inclusion: { in: DOMAINES }
 
+    has_many :incubators, through: :teams
+
+    has_many :team_startups,
+             class_name: "EspaceMembre::Startup",
+             through: :incubators,
+             source: :startups
+
     scope :expired, -> {
       where(
         "NOT EXISTS (:active_missions)",
