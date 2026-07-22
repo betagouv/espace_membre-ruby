@@ -2,7 +2,7 @@ require 'faker'
 
 FactoryBot.define do
   factory :startup, class: "EspaceMembre::Startup" do
-    ghid { Faker::Lorem.word.downcase }
+    ghid { Faker::Internet.slug }
     uuid { Faker::Internet.uuid }
     name { Faker::Lorem.word }
     description { Faker::Lorem.paragraph }
