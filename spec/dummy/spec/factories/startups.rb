@@ -7,6 +7,8 @@ FactoryBot.define do
     name { Faker::Lorem.word }
     description { Faker::Lorem.paragraph }
     incubator
+    contact_incubator { FactoryBot.create(:user) }
+    contact_dinum { FactoryBot.create(:user) }
 
     trait :in_investigation do
       after(:create) do |startup|
