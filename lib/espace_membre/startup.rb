@@ -4,6 +4,10 @@ module EspaceMembre
 
     belongs_to :incubator
 
+    has_and_belongs_to_many :incubators, join_table: "startups_incubators"
+
+    after_save :link_principal_incubator
+
     has_many :phases
 
     has_and_belongs_to_many :organizations, join_table: "startups_organizations"
@@ -40,6 +44,18 @@ module EspaceMembre
 
     def to_s
       name
+    end
+
+    private
+
+    # The `startups_incubators` join table is the source of truth for the
+    # startup/incubator relationship and the database enforces (via a
+    # deferred FK) that a startup's principal incubator is present in the
+    # join table. Make sure we keep the principal incubator in sync.
+    def link_principal_incubator
+      return if incubator.nil?
+
+      incubators << incubator unless incubators.include?(incubator)
     end
   end
 end
