@@ -54,3 +54,6 @@
 /.dockerignore
 /Dockerfile*
 /docker-compose.yml
+
+# Dummy files
+/spec/dummy/tmp/*

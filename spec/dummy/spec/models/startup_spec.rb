@@ -17,6 +17,30 @@ RSpec.describe EspaceMembre::Startup, type: :model do
     end
   end
 
+  describe "incubator linkage" do
+    it "links the startup to its principal incubator through startups_incubators" do
+      startup = FactoryBot.create(:startup)
+
+      expect(startup.reload.incubators).to include startup.incubator
+    end
+
+    it "allows a startup to belong to several incubators through startups_incubators" do
+      startup = FactoryBot.create(:startup)
+      other   = FactoryBot.create(:incubator)
+
+      startup.incubators << other
+
+      expect(startup.reload.incubators).to contain_exactly(startup.incubator, other)
+    end
+
+    it "exposes an incubator's startups through startups_incubators" do
+      incubator = FactoryBot.create(:incubator)
+      one, two  = FactoryBot.create_list(:startup, 2, incubator: incubator)
+
+      expect(incubator.reload.startups).to contain_exactly(one, two)
+    end
+  end
+
   describe "lifecycle" do
     it "has a latest_phase" do
       expect(startup.latest_phase).not_to be_nil
