@@ -36,6 +36,48 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.string "userId", limit: 255, null: false
   end
 
+  create_table "api_keys", primary_key: "uuid", id: :uuid, default: -> { "uuid_generate_v4()" }, force: :cascade do |t|
+    t.timestamptz "confirmed_at"
+    t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.uuid "created_by_user_id", null: false
+    t.timestamptz "expires_at"
+    t.text "kind", null: false
+    t.timestamptz "last_used_at"
+    t.text "name", null: false
+    t.uuid "owner_incubator_id"
+    t.uuid "owner_user_id"
+    t.uuid "read_perimeter_id"
+    t.text "read_perimeter_kind", null: false
+    t.timestamptz "reminder_last_sent_at"
+    t.integer "reminder_stage", default: 0, null: false
+    t.timestamptz "revoked_at"
+    t.uuid "revoked_by_user_id"
+    t.text "revoked_reason"
+    t.text "scopes", null: false, array: true
+    t.text "token_hash", null: false
+    t.text "token_prefix", null: false
+    t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.uuid "write_perimeter_id"
+    t.text "write_perimeter_kind"
+    t.index ["created_at", "confirmed_at", "reminder_stage"], name: "idx_api_keys_sweep_reminder", where: "((revoked_at IS NULL) AND (expires_at IS NULL))"
+    t.index ["last_used_at", "created_at"], name: "idx_api_keys_sweep_unused", where: "(revoked_at IS NULL)"
+    t.index ["owner_incubator_id"], name: "idx_api_keys_live_owner_incubator", where: "(revoked_at IS NULL)"
+    t.index ["owner_user_id"], name: "idx_api_keys_live_owner_user", where: "(revoked_at IS NULL)"
+    t.index ["read_perimeter_kind", "read_perimeter_id"], name: "idx_api_keys_sweep_read_perimeter", where: "((revoked_at IS NULL) AND (read_perimeter_kind <> 'global'::text))"
+    t.index ["write_perimeter_kind", "write_perimeter_id"], name: "idx_api_keys_sweep_write_perimeter", where: "((revoked_at IS NULL) AND (write_perimeter_kind IS NOT NULL) AND (write_perimeter_kind <> 'global'::text))"
+    t.check_constraint "NOT scopes && ARRAY['startups:write'::text, 'incubators:write'::text] OR write_perimeter_kind IS NOT NULL", name: "chk_api_keys_write_needs_perimeter"
+    t.check_constraint "array_length(scopes, 1) >= 1 AND scopes <@ ARRAY['members:read'::text, 'startups:read'::text, 'incubators:read'::text, 'startups:write'::text, 'incubators:write'::text]", name: "chk_api_keys_scopes"
+    t.check_constraint "confirmed_at IS NULL OR confirmed_at >= created_at", name: "chk_api_keys_confirmed_at"
+    t.check_constraint "kind = 'personal'::text AND owner_user_id IS NOT NULL AND owner_incubator_id IS NULL OR kind = 'service'::text AND owner_user_id IS NULL", name: "chk_api_keys_owner"
+    t.check_constraint "kind = ANY (ARRAY['personal'::text, 'service'::text])", name: "chk_api_keys_kind"
+    t.check_constraint "read_perimeter_kind = 'global'::text AND read_perimeter_id IS NULL OR (read_perimeter_kind = ANY (ARRAY['incubator'::text, 'startup'::text])) AND read_perimeter_id IS NOT NULL", name: "chk_api_keys_read_perimeter"
+    t.check_constraint "reminder_stage >= 0 AND reminder_stage <= 2", name: "chk_api_keys_reminder_stage"
+    t.check_constraint "revoked_at IS NULL AND revoked_reason IS NULL OR revoked_at IS NOT NULL AND revoked_reason IS NOT NULL", name: "chk_api_keys_revocation"
+    t.check_constraint "token_prefix ~ '^em1_[A-Za-z0-9_-]{8}$'::text", name: "chk_api_keys_token_prefix"
+    t.check_constraint "write_perimeter_kind IS NULL AND write_perimeter_id IS NULL OR write_perimeter_kind = 'global'::text AND write_perimeter_id IS NULL OR (write_perimeter_kind = ANY (ARRAY['incubator'::text, 'startup'::text])) AND write_perimeter_id IS NOT NULL", name: "chk_api_keys_write_perimeter"
+    t.unique_constraint ["token_hash"], name: "api_keys_token_hash_unique"
+  end
+
   create_table "badge_requests", id: :serial, force: :cascade do |t|
     t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.integer "dossier_number"
@@ -75,6 +117,8 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.string "type", limit: 255
     t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.uuid "user_id"
+    t.timestamptz "user_id_locked_at"
+    t.text "user_id_locked_by"
 
     t.unique_constraint ["email"], name: "dinum_emails_email_unique"
   end
@@ -106,7 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.string "address", limit: 255
     t.string "contact", limit: 255
     t.text "description"
-    t.string "ghid", limit: 255
+    t.string "ghid", limit: 255, null: false
     t.text "github"
     t.uuid "highlighted_startups", array: true
     t.uuid "owner_id"
@@ -125,28 +169,6 @@ ActiveRecord::Schema[8.1].define(version: 0) do
 
   create_table "knex_migrations_lock", primary_key: "index", id: :serial, force: :cascade do |t|
     t.integer "is_locked"
-  end
-
-  create_table "marrainage", primary_key: "username", id: :text, force: :cascade do |t|
-    t.boolean "completed", default: false, null: false
-    t.integer "count", default: 1, null: false
-    t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.text "last_onboarder", null: false
-    t.timestamptz "last_updated", default: -> { "CURRENT_TIMESTAMP" }, null: false
-  end
-
-  create_table "marrainage_groups", id: :serial, force: :cascade do |t|
-    t.integer "count", default: 0, null: false
-    t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }
-    t.string "onboarder", limit: 255
-    t.string "status", limit: 255, default: "PENDING"
-  end
-
-  create_table "marrainage_groups_members", primary_key: ["marrainage_group_id", "username"], force: :cascade do |t|
-    t.bigint "marrainage_group_id", null: false
-    t.string "username", limit: 255, null: false
-    t.index ["marrainage_group_id"], name: "marrainage_groups_members_marrainage_group_id_index"
-    t.index ["username"], name: "marrainage_groups_members_username_index"
   end
 
   create_table "matomo_sites", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -305,12 +327,28 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.uuid "startup_id"
   end
 
+  create_table "startup_urls", primary_key: "uuid", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.text "label"
+    t.integer "position", default: 0, null: false
+    t.uuid "startup_uuid", null: false
+    t.text "type", null: false
+    t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.text "url", null: false
+    t.index ["startup_uuid", "position"], name: "startup_urls_startup_uuid_position_index"
+    t.index ["startup_uuid", "type"], name: "uniq_startup_urls_single_type", unique: true, where: "(type = ANY (ARRAY['stats'::text, 'budget'::text, 'roadmap'::text, 'dashlord'::text, 'ecodesign'::text, 'tech_audit'::text, 'impact'::text, 'analyse_risques'::text]))"
+    t.check_constraint "btrim(url) <> ''::text", name: "chk_startup_urls_url_not_blank"
+    t.check_constraint "type = ANY (ARRAY['website'::text, 'repository'::text, 'stats'::text, 'budget'::text, 'roadmap'::text, 'dashlord'::text, 'ecodesign'::text, 'tech_audit'::text, 'impact'::text, 'analyse_risques'::text, 'tool'::text, 'demo'::text, 'support'::text, 'other'::text])", name: "chk_startup_urls_type"
+  end
+
   create_table "startups", primary_key: "uuid", id: :uuid, default: -> { "uuid_generate_v4()" }, force: :cascade do |t|
     t.string "accessibility_status", limit: 255
     t.boolean "analyse_risques"
     t.text "analyse_risques_url"
     t.text "budget_url"
     t.text "contact"
+    t.uuid "contact_dinum"
+    t.uuid "contact_incubator"
     t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.text "dashlord_url"
     t.text "description"
@@ -352,6 +390,13 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.uuid "startup_id", null: false
     t.text "title"
     t.text "type"
+  end
+
+  create_table "startups_incubators", primary_key: "uuid", id: :uuid, default: -> { "uuid_generate_v4()" }, force: :cascade do |t|
+    t.uuid "incubator_id", null: false
+    t.uuid "startup_id", null: false
+
+    t.unique_constraint ["startup_id", "incubator_id"], name: "startups_incubators_startup_id_incubator_id_unique"
   end
 
   create_table "startups_organizations", primary_key: "uuid", id: :uuid, default: -> { "uuid_generate_v4()" }, force: :cascade do |t|
@@ -408,12 +453,14 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.text "link"
     t.string "member_type", limit: 255
     t.text "osm_city"
+    t.text "pending_primary_email"
+    t.timestamptz "pending_primary_email_expires_at"
+    t.text "pending_primary_email_requested_by"
     t.text "primary_email"
     t.string "primary_email_status", limit: 255, default: "EMAIL_UNSET"
     t.timestamptz "primary_email_status_updated_at", default: -> { "CURRENT_TIMESTAMP" }
     t.string "role", limit: 255, null: false
     t.text "secondary_email"
-    t.integer "tjm"
     t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.uuid "uuid", default: -> { "uuid_generate_v4()" }, null: false
     t.text "workplace_insee_code"
@@ -470,10 +517,12 @@ ActiveRecord::Schema[8.1].define(version: 0) do
     t.text "token", null: false
   end
 
+  add_foreign_key "api_keys", "incubators", column: "owner_incubator_id", primary_key: "uuid", name: "api_keys_owner_incubator_id_foreign", on_delete: :cascade
+  add_foreign_key "api_keys", "users", column: "created_by_user_id", primary_key: "uuid", name: "api_keys_created_by_user_id_foreign", on_delete: :restrict
+  add_foreign_key "api_keys", "users", column: "owner_user_id", primary_key: "uuid", name: "api_keys_owner_user_id_foreign", on_delete: :cascade
+  add_foreign_key "api_keys", "users", column: "revoked_by_user_id", primary_key: "uuid", name: "api_keys_revoked_by_user_id_foreign", on_delete: :nullify
   add_foreign_key "events", "startups", column: "action_on_startup", primary_key: "uuid", name: "events_action_on_startup_foreign"
   add_foreign_key "incubators", "organizations", column: "owner_id", primary_key: "uuid", name: "incubators_owner_id_foreign"
-  add_foreign_key "marrainage_groups_members", "marrainage_groups", name: "marrainage_groups_members_marrainage_group_id_foreign"
-  add_foreign_key "marrainage_groups_members", "users", column: "username", primary_key: "username", name: "marrainage_groups_members_username_foreign"
   add_foreign_key "matomo_sites", "startups", primary_key: "uuid", name: "matomo_sites_startup_id_foreign", on_delete: :cascade
   add_foreign_key "matrix_accounts", "users", primary_key: "uuid", name: "matrix_accounts_user_id_foreign", on_delete: :cascade
   add_foreign_key "missions", "users", primary_key: "uuid", name: "missions_user_id_foreign", on_update: :cascade, on_delete: :cascade
@@ -484,8 +533,14 @@ ActiveRecord::Schema[8.1].define(version: 0) do
   add_foreign_key "service_accounts", "users", primary_key: "uuid", name: "service_accounts_user_id_foreign", on_delete: :cascade
   add_foreign_key "startup_aggregated_stats", "startups", column: "uuid", primary_key: "uuid", name: "startup_aggregated_stats_uuid_foreign", on_delete: :cascade
   add_foreign_key "startup_events", "startups", primary_key: "uuid", name: "startup_events_startup_id_foreign"
+  add_foreign_key "startup_urls", "startups", column: "startup_uuid", primary_key: "uuid", name: "startup_urls_startup_uuid_foreign", on_delete: :cascade
   add_foreign_key "startups", "incubators", primary_key: "uuid", name: "startups_incubator_id_foreign"
+  add_foreign_key "startups", "startups_incubators", column: ["uuid", "incubator_id"], primary_key: ["startup_id", "incubator_id"], name: "startups_principal_incubator_linked", deferrable: :deferred
+  add_foreign_key "startups", "users", column: "contact_dinum", primary_key: "uuid", name: "startups_contact_dinum_foreign"
+  add_foreign_key "startups", "users", column: "contact_incubator", primary_key: "uuid", name: "startups_contact_incubator_foreign"
   add_foreign_key "startups_files", "startups", primary_key: "uuid", name: "startups_files_startup_id_foreign", on_delete: :cascade
+  add_foreign_key "startups_incubators", "incubators", primary_key: "uuid", name: "startups_incubators_incubator_id_foreign", on_delete: :cascade
+  add_foreign_key "startups_incubators", "startups", primary_key: "uuid", name: "startups_incubators_startup_id_foreign", on_delete: :cascade
   add_foreign_key "startups_organizations", "organizations", primary_key: "uuid", name: "startups_organizations_organization_id_foreign", on_delete: :cascade
   add_foreign_key "startups_organizations", "startups", primary_key: "uuid", name: "startups_organizations_startup_id_foreign", on_delete: :cascade
   add_foreign_key "teams", "incubators", primary_key: "uuid", name: "teams_incubator_id_foreign", on_delete: :cascade

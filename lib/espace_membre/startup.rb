@@ -19,6 +19,9 @@ module EspaceMembre
             class_name: "Phase",
             inverse_of: :startup
 
+    belongs_to :contact_incubator, class_name: "User", foreign_key: "contact_incubator"
+    belongs_to :contact_dinum, class_name: "User", foreign_key: "contact_dinum"
+
     # we must use this tragic hack because a startup can have one or
     # more phases without an 'end' timestamp, which is wrong and
     # misleading but that's how the data exists. So instead of
